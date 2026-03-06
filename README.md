@@ -7,3 +7,5 @@ For VS Code build/program, recommend using extension [stm32-for-vscode](https://
 
 Also in CubeMX, use: `Project Manager -> Toolchain / IDE -> Makefile`
 
+
+<!-- https://github.com/Bogd-an/stm32_2026 -->
