@@ -11,7 +11,8 @@
     },
     "settings": {
         "markdown.copyFiles.destination": {
-            "**/*": "${documentDirName}/imgs/"
+            "**/*": "${documentDirName}/imgs/",
         },
+        "workbench.profiles.defaultProfileName": "stm32" // work or no?
     }
 }
