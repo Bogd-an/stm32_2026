@@ -6,7 +6,8 @@
     ],
     "extensions": {
         "recommendations": [
-            "bmd.stm32-for-vscode"
+            "bmd.stm32-for-vscode",
+            "tomoki1207.pdf"
         ]
     },
     "settings": {
