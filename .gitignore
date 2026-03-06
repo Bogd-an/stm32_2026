@@ -1,0 +1,61 @@
+
+    # --- Результати збірки (займають багато місця, не потрібні в Git) ---
+build/
+Debug/
+Drivers
+Startup
+Release/
+bin/
+obj/
+
+# --- Тимчасові файли компіляції та дебагу ---
+*.elf
+*.bin
+*.hex
+*.map
+*.o
+*.d
+*.su
+*.lst
+*.bak
+
+# --- Локальні налаштування (Тут твої абсолютні шляхи!) ---
+.vscode/
+.settings/
+.stm32env
+.mxproject
+*.launch
+
+# --- Налаштування плагіна (Залишаємо конфіг, але ігноруємо кеш) ---
+# .stm32-for-vscode (якщо з'явиться така папка)
+
+# --- Дозволяємо важливі файли для CubeMX та VS Code ---
+# !Makefile
+# !*.make
+# !*.ld
+# !*.cfg
+!*.ioc
+# !*.yaml
+!*.code-workspace
+!*.s
+
+Makefile
+*.make
+*.ld
+*.cfg
+*startup_stm32f103xb.s
+*STM32-for-VSCode.config.yaml
+.cproject
+.project
+.DS_Store
+
+stm32f1xx_hal_conf.h
+stm32f1xx_it.h
+stm32f1xx_hal_msp.c
+stm32f1xx_it.c
+syscalls.c
+sysmem.c
+system_stm32f1xx.c
+
+*.code-workspace
+!vsc stm32.code-workspace
