@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+// !!!
 #include "lcd.h"
 /* USER CODE END Includes */
 
@@ -45,8 +46,9 @@ DMA_HandleTypeDef hdma_usart2_tx;
 DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
-uint8_t trans[] = "USART Transmit from STM32\r\n"; // Рядок для передачі [cite: 252]
-char received[9] = {0};                 // Буфер для прийому 8 символів + '\0' [cite: 366]
+// !!!
+uint8_t trans[] = "UART Transmit from STM32\n";
+char received[8] = {0};            
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -89,15 +91,14 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  LCD_Init();                          // Ініціалізація дисплея [cite: 387]
+  // !!!
+  LCD_Init();                          // Ініціалізація дисплея 
   LCD_Clear();
-  LCD_String("Received:");             // Заголовок у першому рядку [cite: 388]
+  LCD_String("Received:");             // Заголовок у першому рядку
   // Запускаємо циклічний прийом 8 байт через DMA
   HAL_UART_Receive_DMA(&huart2, (uint8_t*)received, 8);
   /* USER CODE END 2 */
@@ -106,17 +107,17 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_UART_Transmit_DMA(&huart2, trans, sizeof(trans)-1); 
-    HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    // !!!
+    HAL_UART_Transmit_DMA(&huart2, trans, sizeof(trans)-1); 
+    HAL_Delay(500);
     if(hdma_usart2_rx.State == HAL_DMA_STATE_READY) 
     {
-      LCD_SetPos(0, 1);                // Перехід на другий рядок [cite: 398]
-      LCD_String(received);            // Вивід прийнятих символів [cite: 399]
-      
-      // Перезапуск прийому для наступної порції даних [cite: 476]
+      LCD_SetPos(0, 1);                // Перехід на другий рядок
+      LCD_String(received);            // Вивід прийнятих символів
+      // Перезапуск прийому для наступної порції даних
       HAL_UART_Receive_DMA(&huart2, (uint8_t*)received, 8); 
     }
   }
