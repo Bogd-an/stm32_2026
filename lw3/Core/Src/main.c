@@ -96,28 +96,29 @@ int main(void)
   MX_DMA_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
   // !!!
   LCD_Init();
   LCD_Clear();
   LCD_SetPos(0, 0);
   LCD_String("Received: len=");
   LCD_Char(received_size + '0');
-  HAL_UART_Receive_DMA(&huart2, (uint8_t*)received, received_size); // Запускаємо циклічний прийом 
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+  HAL_UART_Receive_DMA(&huart2, (uint8_t*)received, received_size);
   while (1)
   {
-    // !!!
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     HAL_UART_Transmit_DMA(&huart2, trans, sizeof(trans)-1); 
     HAL_Delay(500);
-    if(hdma_usart2_rx.State == HAL_DMA_STATE_READY) 
+    if(hdma_usart2_rx.State == HAL_DMA_STATE_READY) //if(huart2.RxXferCount == 0) 
     {
       LCD_SetPos(0, 1);
       LCD_String(received);
       HAL_UART_Receive_DMA(&huart2, (uint8_t*)received, received_size); // Перезапуск прийом
+      //hdma_usart2_rx.State = HAL_DMA_STATE_BUSY;// Скидання стану DMA для прийому, не обов'язково
     }
   }
   /* USER CODE END 3 */
