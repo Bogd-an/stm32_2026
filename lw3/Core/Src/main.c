@@ -22,7 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 // !!!
-#include "lcd.h"
+#include "lcdST7920.h"     //#include "lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,7 +48,8 @@ DMA_HandleTypeDef hdma_usart2_rx;
 /* USER CODE BEGIN PV */
 // !!!
 uint8_t trans[] = "UART Transmit from STM32\n";
-char received[8] = {0};            
+char received[9] = {0};
+const int received_size = sizeof(received)/sizeof(char)-1;         
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,29 +97,27 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   // !!!
-  LCD_Init();                          // Ініціалізація дисплея 
+  LCD_Init();
   LCD_Clear();
-  LCD_String("Received:");             // Заголовок у першому рядку
-  // Запускаємо циклічний прийом 8 байт через DMA
-  HAL_UART_Receive_DMA(&huart2, (uint8_t*)received, 8);
+  LCD_SetPos(0, 0);
+  LCD_String("Received: len=");
+  LCD_Char(received_size + '0');
+  HAL_UART_Receive_DMA(&huart2, (uint8_t*)received, received_size); // Запускаємо циклічний прийом 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
     // !!!
+    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     HAL_UART_Transmit_DMA(&huart2, trans, sizeof(trans)-1); 
     HAL_Delay(500);
     if(hdma_usart2_rx.State == HAL_DMA_STATE_READY) 
     {
-      LCD_SetPos(0, 1);                // Перехід на другий рядок
-      LCD_String(received);            // Вивід прийнятих символів
-      // Перезапуск прийому для наступної порції даних
-      HAL_UART_Receive_DMA(&huart2, (uint8_t*)received, 8); 
+      LCD_SetPos(0, 1);
+      LCD_String(received);
+      HAL_UART_Receive_DMA(&huart2, (uint8_t*)received, received_size); // Перезапуск прийом
     }
   }
   /* USER CODE END 3 */
@@ -237,8 +236,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LCD_RS_Pin|LCD_E_Pin|LCD_D4_Pin|LCD_D5_Pin
-                          |LCD_D6_Pin|LCD_D7_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LCD_CS_Pin|LCD_SID_Pin|LCD_SCK_Pin|LCD_RS_Pin
+                          |LCD_E_Pin|LCD_D4_Pin|LCD_D5_Pin|LCD_D6_Pin
+                          |LCD_D7_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -247,10 +247,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LCD_RS_Pin LCD_E_Pin LCD_D4_Pin LCD_D5_Pin
-                           LCD_D6_Pin LCD_D7_Pin */
-  GPIO_InitStruct.Pin = LCD_RS_Pin|LCD_E_Pin|LCD_D4_Pin|LCD_D5_Pin
-                          |LCD_D6_Pin|LCD_D7_Pin;
+  /*Configure GPIO pins : LCD_CS_Pin LCD_SID_Pin LCD_SCK_Pin LCD_RS_Pin
+                           LCD_E_Pin LCD_D4_Pin LCD_D5_Pin LCD_D6_Pin
+                           LCD_D7_Pin */
+  GPIO_InitStruct.Pin = LCD_CS_Pin|LCD_SID_Pin|LCD_SCK_Pin|LCD_RS_Pin
+                          |LCD_E_Pin|LCD_D4_Pin|LCD_D5_Pin|LCD_D6_Pin
+                          |LCD_D7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
