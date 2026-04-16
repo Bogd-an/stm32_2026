@@ -18,13 +18,16 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "adc.h"
+#include "i2c.h"
+#include "tim.h" /* ЦЕ З'ЯВИТЬСЯ ПІСЛЯ ГЕНЕРАЦІЇ TIM2 */
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "lcd.h"
+#include "fonts.h"
+#include "ssd1306.h"
 #include "stdio.h"
+#include "max30102.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,10 +48,11 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t i;
-char str[50];
-char voltage_str[10];
-uint16_t adc_val;
+extern uint8_t spo2;
+extern uint8_t heartRate;
+ int16_t diff;
+ char SPO2[8];
+ char HR[8];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,7 +72,6 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -91,12 +94,24 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ADC1_Init();
+  MX_I2C1_Init();
+  MX_I2C2_Init();
+  MX_TIM2_Init(); /* ЦЕ З'ЯВИТЬСЯ ПІСЛЯ ГЕНЕРАЦІЇ TIM2 */
+  
   /* USER CODE BEGIN 2 */
-	// LCD_Init();
-	// LCD_String("Voltage: ");
-  // LCD_SetCursor(0, 13);
-  // LCD_Char('V');
+  HAL_TIM_Base_Start_IT(&htim2);
+
+  // Ініціалізація дисплею
+  SSD1306_Init();
+
+  // Ініціалізація MAX30102
+  max30102_init();
+
+  SSD1306_GotoXY (0,20);
+  SSD1306_Puts("HRate:", &Font_11x18, 1);
+  SSD1306_GotoXY (0,45);
+  SSD1306_Puts("SpO2:", &Font_11x18, 1);
+  SSD1306_UpdateScreen();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,16 +121,28 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //     LCD_SetCursor(1, 8);
-    // adc_val = HAL_ADC_GetValue(&hadc1);
-    // float voltage = (adc_val * 3.3) / 4095;
-    // sprintf(voltage_str, "%.2f", voltage);
-    // // strcpy(voltage_str, "loading");
-    // LCD_String(voltage_str);
-    HAL_Delay(500);
-    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-    // HAL_Delay(500);
-    // HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET)
+    {
+      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+      max30102_cal();
+      spo2 = max30102_getSpO2();
+      sprintf(SPO2,"%3d", spo2);
+      heartRate = max30102_getHeartRate();
+      sprintf(HR, "%3d", heartRate);
+      diff = max30102_getDiff();
+    }
+    
+    SSD1306_GotoXY (66,20);
+    SSD1306_Puts (HR, &Font_11x18, 1);
+    SSD1306_GotoXY (99,20);
+    SSD1306_Puts ("bpm", &Font_7x10, 1);
+    
+    SSD1306_GotoXY (66,45);
+    SSD1306_Puts (SPO2, &Font_11x18, 1);
+    SSD1306_GotoXY (99,45);
+    SSD1306_Puts ("%", &Font_11x18, 1);
+    
+    // SSD1306_UpdateScreen(); // Закоментовано згідно з п.4.4, бо тепер оновлюється в перериванні TIM2
   }
   /* USER CODE END 3 */
 }
@@ -128,7 +155,6 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -158,12 +184,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
-    Error_Handler();
-  }
 }
 
 /* USER CODE BEGIN 4 */
@@ -184,10 +204,11 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-#ifdef USE_FULL_ASSERT
+
+#ifdef  USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
+  * where the assert_param error has occurred.
   * @param  file: pointer to the source file name
   * @param  line: assert_param error line source number
   * @retval None
