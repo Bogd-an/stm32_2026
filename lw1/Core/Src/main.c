@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+// !!!
 #include "lcd.h"
 #include "stdio.h"
 /* USER CODE END Includes */
@@ -45,6 +46,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+// !!!
 uint16_t i;
 char str[50];
 char voltage_str[10];
@@ -93,29 +95,31 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-	// LCD_Init();
-	// LCD_String("Voltage: ");
-  // LCD_SetCursor(0, 13);
-  // LCD_Char('V');
+  // !!!
+  LCD_init();
+  LCD_String("Voltage: ");
+  HAL_ADCEx_Calibration_Start(&hadc1); // Калібрування
+  HAL_ADC_Start_IT(&hadc1);           // Запуск АЦП в режимі переривань
+  HAL_TIM_Base_Start(&htim3);         // Запуск таймера-тригера
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  // !!!
   while (1)
   {
+      // Розрахунок напруги: (ADC_val * Vref) / Max_Code
+      adc_val = ((float)HAL_ADC_GetValue(&hadc1) * 3.3 / 4096); 
+      
+      sprintf(str, "%.2fv", u);
+      LCD_SetPos(9, 0);
+      LCD_String(str);
+      
+      HAL_Delay(100);
+      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //     LCD_SetCursor(1, 8);
-    // adc_val = HAL_ADC_GetValue(&hadc1);
-    // float voltage = (adc_val * 3.3) / 4095;
-    // sprintf(voltage_str, "%.2f", voltage);
-    // // strcpy(voltage_str, "loading");
-    // LCD_String(voltage_str);
-    HAL_Delay(500);
-    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-    // HAL_Delay(500);
-    // HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
   }
   /* USER CODE END 3 */
 }
