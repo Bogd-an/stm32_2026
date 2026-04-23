@@ -8,18 +8,18 @@
 
 #### CubeMX
 
-![alt text](image.png)
+![alt text](img/image.png)
 
-![alt text](image-1.png)
+![alt text](img/image-1.png)
 
-![alt text](image-2.png)
+![alt text](img/image-2.png)
 
-![alt text](image-3.png)
+![alt text](img/image-3.png)
 
-![alt text](image-4.png)
+![alt text](img/image-4.png)
 
 
-#### [main.c](Core/Src/main.c)
+#### [main.c](img/Core/Src/main.c)
 
 0. USER CODE BEGIN Includes:
     * 'lcd.h' для зручної роботи з дисплеєм
@@ -75,15 +75,15 @@ const int received_size = sizeof(received)/sizeof(char)-1;
 
 #### Схема
 
-![alt text](telegram-cloud-photo-size-2-5325917291843096735-y.jpg)
+![alt text](img/telegram-cloud-photo-size-2-5325917291843096735-y.jpg)
 
-![alt text](image-5.png)
+![alt text](img/image-5.png)
 
 Відправка з монітору порту `hi from laptop`
 
 > оскільки буфер символів довжиною 8 останнє слово не видно :(
 
-![alt text](image-6.png)
+![alt text](img/image-6.png)
 
 ### Висновок
 Під час виконання роботи було засвоєно практичні навички налаштування модуля UART у мікроконтролері STM32. Використання режиму DMA дозволило організувати ефективний обмін даними з мінімальним навантаженням на центральний процесор. Встановлено, що для коректного відображення символів на LCD важливо враховувати розмір буфера та наявність символу кінця рядка. Робота підтвердила переваги асинхронної передачі даних у системах керування.
@@ -131,4 +131,4 @@ DMA дозволяє передавати масиви даних між пер�
 
 Апаратна частина складається з генератора швидкості (Baud Rate Generator), регістрів даних та зсувних регістрів приймача і передавача, а також блоку керування. Процесор або DMA записує байт у регістр передавача, звідки він переноситься у зсувний регістр і побітно видається на лінію TX; приймач працює у зворотному порядку, збираючи біти з лінії RX у зсувний регістр.
 
-![alt text](image-7.png)
+![alt text](img/image-7.png)
