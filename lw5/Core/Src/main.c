@@ -19,7 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
-#include "tim.h" /* ЦЕ З'ЯВИТЬСЯ ПІСЛЯ ГЕНЕРАЦІЇ TIM2 */
+#include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -50,9 +50,9 @@
 /* USER CODE BEGIN PV */
 extern uint8_t spo2;
 extern uint8_t heartRate;
- int16_t diff;
- char SPO2[8];
- char HR[8];
+int16_t diff;
+char SPO2[8];
+char HR[8];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -72,6 +72,7 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -96,22 +97,21 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
-  MX_TIM2_Init(); /* ЦЕ З'ЯВИТЬСЯ ПІСЛЯ ГЕНЕРАЦІЇ TIM2 */
-  
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(&htim2);
-
-  // Ініціалізація дисплею
   SSD1306_Init();
+  // Встановити курсор на позицію 0,0
+  SSD1306_GotoXY (0,0);
+  // Вивести напис Kafedra (шрифт 11х18 пікселів)
+  SSD1306_Puts ("ScreenTest", &Font_11x18, 1);
+  SSD1306_UpdateScreen();
+  HAL_Delay(1000); // Затримка 2 секунди
+
+  HAL_TIM_Base_Start_IT(&htim2);
 
   // Ініціалізація MAX30102
   max30102_init();
 
-  SSD1306_GotoXY (0,20);
-  SSD1306_Puts("HRate:", &Font_11x18, 1);
-  SSD1306_GotoXY (0,45);
-  SSD1306_Puts("SpO2:", &Font_11x18, 1);
-  SSD1306_UpdateScreen();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -121,29 +121,27 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET)
-    {
-      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-      max30102_cal();
-      spo2 = max30102_getSpO2();
-      sprintf(SPO2,"%3d", spo2);
-      heartRate = max30102_getHeartRate();
-      sprintf(HR, "%3d", heartRate);
-      diff = max30102_getDiff();
-    }
-    
-    SSD1306_GotoXY (66,20);
-    SSD1306_Puts (HR, &Font_11x18, 1);
-    SSD1306_GotoXY (99,20);
-    SSD1306_Puts ("bpm", &Font_7x10, 1);
-    
-    SSD1306_GotoXY (66,45);
-    SSD1306_Puts (SPO2, &Font_11x18, 1);
-    SSD1306_GotoXY (99,45);
-    SSD1306_Puts ("%", &Font_11x18, 1);
-    
-    // SSD1306_UpdateScreen(); // Закоментовано згідно з п.4.4, бо тепер оновлюється в перериванні TIM2
-  }
+        if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET)
+        {
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+        max30102_cal();
+        spo2 = max30102_getSpO2();
+        sprintf(SPO2,"%3d", spo2);
+        heartRate = max30102_getHeartRate();
+        sprintf(HR, "%3d", heartRate);
+        diff = max30102_getDiff();
+        }
+        SSD1306_GotoXY (66,20);
+        SSD1306_Puts (HR, &Font_11x18, 1);
+        SSD1306_GotoXY (99,20);
+        SSD1306_Puts ("bpm", &Font_7x10, 1);
+        SSD1306_GotoXY (66,45);
+        SSD1306_Puts (SPO2, &Font_11x18, 1);
+        SSD1306_GotoXY (99,45);
+        SSD1306_Puts ("%", &Font_11x18, 1);
+        SSD1306_UpdateScreen();
+    } 
+
   /* USER CODE END 3 */
 }
 
@@ -204,11 +202,10 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
-  * where the assert_param error has occurred.
+  *         where the assert_param error has occurred.
   * @param  file: pointer to the source file name
   * @param  line: assert_param error line source number
   * @retval None
