@@ -24,6 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+// !!!
 #include "fonts.h"
 #include "ssd1306.h"
 #include "stdio.h"
@@ -48,11 +49,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+// !!!
 extern uint8_t spo2;
 extern uint8_t heartRate;
-int16_t diff;
-char SPO2[8];
-char HR[8];
+int16_t diff =0;
+char SPO2[8] =  {0};
+char HR[8] = {0};
+int16_t diff_past = 0;
+uint8_t i = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,49 +103,124 @@ int main(void)
   MX_I2C2_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  SSD1306_Init();
-  // Встановити курсор на позицію 0,0
-  SSD1306_GotoXY (0,0);
-  // Вивести напис Kafedra (шрифт 11х18 пікселів)
-  SSD1306_Puts ("ScreenTest", &Font_11x18, 1);
-  SSD1306_UpdateScreen();
-  HAL_Delay(1000); // Затримка 2 секунди
-
-  HAL_TIM_Base_Start_IT(&htim2);
-
-  // Ініціалізація MAX30102
-  max30102_init();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  // !!!
+  SSD1306_Init();
+  SSD1306_GotoXY (0,0);
+  SSD1306_Puts ("max30102", &Font_11x18, 1);
+  SSD1306_GotoXY (99,20);
+  SSD1306_Puts ("bpm", &Font_7x10, 1);
+  SSD1306_GotoXY (99,45);
+  SSD1306_Puts ("%", &Font_11x18, 1);
+  SSD1306_UpdateScreen();
+
+  HAL_TIM_Base_Start_IT(&htim2);
+
+  max30102_init();
+  uint8_t consecutive_valid = 0;
+  uint8_t is_showing_pulse = 255; 
+  uint8_t past_heartRate = 0;
+  int16_t diff_past = 0;
+
   while (1)
   {
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET) 
+    {
+      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+      
+      max30102_cal();
+      spo2 = max30102_getSpO2();
+      heartRate = max30102_getHeartRate();
+      int16_t current_diff = max30102_getDiff();
+
+      int16_t graph_val = current_diff;
+      if (graph_val > 15) graph_val = 15;
+      if (graph_val < 0) graph_val = 0;
+
+      if (i == 0) diff_past = graph_val;
+      
+      SSD1306_DrawLine(i, 15 - diff_past, i + 1, 15 - graph_val, 1);
+      diff_past = graph_val;
+
+      if (i > 124) {
+        SSD1306_DrawFilledRectangle(0, 0, 127, 16, 0);
+        i = 0;
+      } else {
+        i++;
+      }
+
+      uint8_t is_valid_range = (heartRate >= 30 && heartRate <= 220 && spo2 > 0);
+      uint8_t is_stable = 0;
+
+      if (is_valid_range) {
+        if (past_heartRate == 0) {
+          is_stable = 1; 
+        } else {
+          int16_t hr_delta = abs((int16_t)heartRate - (int16_t)past_heartRate);
+          int16_t threshold = (past_heartRate * 20) / 100;
+          
+          if (hr_delta <= threshold) {
+            is_stable = 1;
+          }
+        }
+      }
+
+
+      if (is_stable) {
+        past_heartRate = heartRate; 
+        if (consecutive_valid < 10) consecutive_valid++;
+      } else {
+        if (consecutive_valid > 0) consecutive_valid--;
+        if (consecutive_valid == 0) past_heartRate = 0; 
+      }
+
+      uint8_t should_show_pulse = (consecutive_valid >= 3); 
+
+      if (should_show_pulse != is_showing_pulse) 
+      {
+        is_showing_pulse = should_show_pulse;
+        
+        
+        SSD1306_DrawFilledRectangle(0, 17, 128, 47, 0); 
+        
+        if (is_showing_pulse) 
+        {
+
+          SSD1306_GotoXY(99, 20);
+          SSD1306_Puts("bpm", &Font_7x10, 1);
+          SSD1306_GotoXY(99, 45);
+          SSD1306_Puts("%", &Font_11x18, 1);
+        }
+        else 
+        {
+          SSD1306_GotoXY(0, 25);
+          SSD1306_Puts("Scanning", &Font_7x10, 1);
+          SSD1306_GotoXY(0, 45);
+          SSD1306_Puts("pulse...", &Font_7x10, 1);
+        }
+      }
+
+      if (is_showing_pulse) 
+      {
+        sprintf(HR, "%3d", heartRate > 999 ? 999 : heartRate);
+        sprintf(SPO2, "%3d", spo2);
+        
+        SSD1306_GotoXY(60, 20);
+        SSD1306_Puts(HR, &Font_11x18, 1);
+        SSD1306_GotoXY(60, 45);
+        SSD1306_Puts(SPO2, &Font_11x18, 1);
+      }
+
+      SSD1306_UpdateScreen();
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET)
-        {
-        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-        max30102_cal();
-        spo2 = max30102_getSpO2();
-        sprintf(SPO2,"%3d", spo2);
-        heartRate = max30102_getHeartRate();
-        sprintf(HR, "%3d", heartRate);
-        diff = max30102_getDiff();
-        }
-        SSD1306_GotoXY (66,20);
-        SSD1306_Puts (HR, &Font_11x18, 1);
-        SSD1306_GotoXY (99,20);
-        SSD1306_Puts ("bpm", &Font_7x10, 1);
-        SSD1306_GotoXY (66,45);
-        SSD1306_Puts (SPO2, &Font_11x18, 1);
-        SSD1306_GotoXY (99,45);
-        SSD1306_Puts ("%", &Font_11x18, 1);
-        SSD1306_UpdateScreen();
-    } 
-
+  }
   /* USER CODE END 3 */
 }
 

@@ -118,7 +118,7 @@ void max30102_ON()
 
 /************************************************************/
 
-#define BUFF_SIZE 50
+#define BUFF_SIZE 200
 SAMPLE sampleBuff[BUFF_SIZE];
 
 uint8_t heartRate = 0;
