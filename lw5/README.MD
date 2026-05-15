@@ -8,7 +8,9 @@
 
 ## Підключення
 
-![alt text](image.png)
+![alt text](img/image.png)
+
+![alt text](img/2image.png)
 
 ---
 ## 1. Програмний код керування (main.c)
